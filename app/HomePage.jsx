@@ -18,6 +18,9 @@ import {
 
 const HomePage = () => {
   const [hide, sethide] = useState(false);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   
   // temporary
   const data = [
@@ -38,6 +41,35 @@ const HomePage = () => {
     {icon:<User className="size-7" />, header:'New customer registered', text:'Product Name', time: 12,  },
   ]
 
+ React.useEffect(() => {
+   const fetchStats = async () => {
+     try {
+       setLoading(true);
+       setError("");
+
+       const res = await fetch("/api/admin/stats", {
+         cache: "no-store",
+       });
+
+       if (!res.ok) {
+         throw new Error("Unable to load dashboard statistics");
+       }
+
+       const result = await res.json();
+
+       setStats(result);
+     } catch (error) {
+       console.error(error);
+       setError(error.message);
+     } finally {
+       setLoading(false);
+     }
+   };
+
+   fetchStats();
+ }, []);
+
+
   return (
     <main className="">
       <section className="px-2 md:px-15 ">
@@ -46,6 +78,7 @@ const HomePage = () => {
           <p className="text-xs text-slate-500 ">
             Here's whats's happening on Onarce today
           </p>
+          {error && <p className="text-sm text-red-500">{error}</p>}
         </div>
 
         <div className=" flex flex-col justify-between  ">
@@ -61,7 +94,9 @@ const HomePage = () => {
                 <div className=" flex flex-col gap-1 ">
                   <h2 className="text-gray-600 font-semibold "> Total Shops</h2>
                   <p className="text-[1.6rem] max-md:text-2xl max-md:font-bold font-extrabold  text-black">
-                    100k{" "}
+                    {loading
+                      ? "..."
+                      : (stats?.totals?.shops?.toLocaleString() ?? "0")}
                   </p>
                   <span className="text-sm text-green-500 font-extrabold">
                     +18.5%
@@ -85,7 +120,9 @@ const HomePage = () => {
                     Total Orders
                   </h2>
                   <p className="text-[1.6rem] max-md:text-2xl max-md:font-bold font-extrabold text-black">
-                    8.2k{" "}
+                    {loading
+                      ? "..."
+                      : (stats?.totals?.orders?.toLocaleString() ?? "0")}
                   </p>
                   <span className="text-sm text-green-500 font-extrabold">
                     +12.5%
@@ -109,7 +146,9 @@ const HomePage = () => {
                     Total Customers
                   </h2>
                   <p className="text-[1.6rem] max-md:text-2xl max-md:font-bold font-extrabold text-black">
-                    128.2k{" "}
+                    {loading
+                      ? "..."
+                      : (stats?.totals?.customers?.toLocaleString() ?? "0")}
                   </p>
                   <span className="text-sm text-green-500 font-extrabold">
                     +12.5%
@@ -128,9 +167,13 @@ const HomePage = () => {
                 </div>
 
                 <div className=" flex flex-col gap-1 ">
-                  <h2 className="text-gray-600 font-semibold "> Revenue</h2>
+                  <h2 className="text-gray-600 font-semibold ">
+                    Total Products
+                  </h2>
                   <p className="text-[1.6rem] max-md:text-2xl max-md:font-bold font-extrabold text-black">
-                    ₦10M{" "}
+                    {loading
+                      ? "..."
+                      : (stats?.totals?.products?.toLocaleString() ?? "0")}
                   </p>
                   <span className="text-sm text-green-500 font-extrabold">
                     +12.5%
@@ -289,9 +332,7 @@ const HomePage = () => {
           <div className="flex justify-between items-center mb-2">
             <div className="flex items-center justify-center gap-2 h-full">
               <Trophy className="size-6 text-yellow-500" />
-              <h2 className="font-semibold text-sm mt-auto">
-                Top Products
-              </h2>
+              <h2 className="font-semibold text-sm mt-auto">Top Products</h2>
             </div>
 
             <div className="flex items-center justify-center gap-2 h-full text-blue-700">

@@ -27,6 +27,7 @@ export async function GET(req) {
         shops,
         orders,
         customers,
+        products,
         newShops,
         newProducts,
         newUsers,
@@ -36,6 +37,7 @@ export async function GET(req) {
         count(adminDb.collection("stores")),
         count(adminDb.collection("orders")),
         count(adminDb.collection("users").where("role", "==", "customer")),
+        count(adminDb.collection("products")),
         latest("stores", "createdAt"),
         latest("products", "createdAt"),
         latest("users", "createdAt"),
@@ -82,12 +84,18 @@ export async function GET(req) {
         .slice(0, 30);
 
       await adminDb.doc("adminStats/summary").set({
-        totals: { shops, orders, customers },
+        totals: { shops, orders, customers, products },
         activity,
         updatedAt: Date.now(),
       });
 
-      return NextResponse.json({ ok: true, shops, orders, customers });
+      return NextResponse.json({
+        ok: true,
+        shops,
+        orders,
+        customers,
+        products,
+      });
     } catch (error) {
       console.error("ADMIN SNAPSHOT ERROR:", error);
 
