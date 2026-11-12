@@ -1,5 +1,20 @@
 "use client";
-import { ArrowRight, Bolt, ChartBellCurve, ChartGanttIcon, Dot, Eye, EyeClosed, LineSquiggle, ShoppingBag, ShoppingCart, SignalHigh, Store, Trophy, User } from "lucide-react";
+import {
+  ArrowRight,
+  Bolt,
+  ChartBellCurve,
+  ChartGanttIcon,
+  Dot,
+  Eye,
+  EyeClosed,
+  LineSquiggle,
+  ShoppingBag,
+  ShoppingCart,
+  SignalHigh,
+  Store,
+  Trophy,
+  User,
+} from "lucide-react";
 import React, { useState } from "react";
 import { BiCube } from "react-icons/bi";
 import { BsLightning, BsLightningChargeFill } from "react-icons/bs";
@@ -21,7 +36,7 @@ const HomePage = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  
+
   // temporary
   const data = [
     { month: "Mon", sales: 7000, revenue: 2400 },
@@ -34,41 +49,70 @@ const HomePage = () => {
   ];
 
   // temporary
-  const recent = [
-    {icon:<Store className="size-7" />, header:'New shop registerd', text:'Shop name', time: 3,  },
-    {icon:<ShoppingCart className="size-7" />, header:'New order placed', text:'Order tracker', time: 5,  },
-    {icon:<BiCube className="size-7 text-yellow-500" />, header:'Product Added', text:'Product Name', time: 12,  },
-    {icon:<User className="size-7" />, header:'New customer registered', text:'Product Name', time: 12,  },
-  ]
+  // const recent = [
+  //   {icon:<Store className="size-7" />, header:'New shop registerd', text:'Shop name', time: 3,  },
+  //   {icon:<ShoppingCart className="size-7" />, header:'New order placed', text:'Order tracker', time: 5,  },
+  //   {icon:<BiCube className="size-7 text-yellow-500" />, header:'Product Added', text:'Product Name', time: 12,  },
+  //   {icon:<User className="size-7" />, header:'New customer registered', text:'Product Name', time: 12,  },
+  // ]
 
- React.useEffect(() => {
-   const fetchStats = async () => {
-     try {
-       setLoading(true);
-       setError("");
+  const activityLabels = {
+    shop_registered: "New shop Registered",
+    product_added: "Product added",
+    customer_registered: "New customer registered",
+    order_placed: "New order placed",
+    order_delivered: "Order delivered",
+  };
 
-       const res = await fetch("/api/admin/stats", {
-         cache: "no-store",
-       });
+  const activityIcons = {
+    shop_registered: <Store className="size-8"/>,
+    product_added: <BiCube className="size-8"/>,
+    customer_registered: <User className="size-8"/>,
+    order_placed: <ShoppingCart className="size-8"/>,
+    order_delivered: "Order delivered",
+  };
 
-       if (!res.ok) {
-         throw new Error("Unable to load dashboard statistics");
-       }
+  const formatTimeAgo = (timestamp) => {
+    const seconds = Math.floor((Date.now() - timestamp) / 1000);
 
-       const result = await res.json();
+    if (seconds < 60) return "Just now";
 
-       setStats(result);
-     } catch (error) {
-       console.error(error);
-       setError(error.message);
-     } finally {
-       setLoading(false);
-     }
-   };
+    if (seconds < 3600) {
+      return `${Math.floor(seconds / 60)}m ago`;
+    }
+    if (seconds < 86400) {
+      return `${Math.floor(seconds / 3600)}h ago`;
+    }
+    return `${Math.floor(seconds / 86400)}d ago`;
+  };
 
-   fetchStats();
- }, []);
+  React.useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setLoading(true);
+        setError("");
 
+        const res = await fetch("/api/admin/stats", {
+          cache: "no-store",
+        });
+
+        if (!res.ok) {
+          throw new Error("Unable to load dashboard statistics");
+        }
+
+        const result = await res.json();
+
+        setStats(result);
+      } catch (error) {
+        console.error(error);
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
 
   return (
     <main className="">
@@ -267,16 +311,16 @@ const HomePage = () => {
               </div>
 
               <div
-                className={` absolute px-1 inset-0   transform duration-400 flex  items-end justify-start ${hide ? "backdrop-blur-md bg-white/10   " : "backdrop-blur-none text-white/30"}`}
+                className={` absolute px-1 inset-0   transform duration-400 flex  items-end justify-start ${hide ? "backdrop-blur-none  " : "backdrop-blur-md bg-white/10"}`}
               >
                 <button
                   className="z-10 p-2"
                   onClick={() => sethide((prev) => !prev)}
                 >
                   {hide ? (
-                    <EyeClosed className="size-8" />
-                  ) : (
                     <Eye className="size-8" />
+                  ) : (
+                    <EyeClosed className="size-8" />
                   )}
                 </button>
               </div>
@@ -302,7 +346,7 @@ const HomePage = () => {
           </div>
 
           <div className="py-2 flex flex-col gap-3">
-            {recent.map((item, index) => (
+            {/* {recent.map((item, index) => (
               <div key={index} className="">
                 <div className="flex justify-between  ">
                   <div className="flex items-center justify-center h-full gap-2 ">
@@ -323,12 +367,48 @@ const HomePage = () => {
                   </div>
                 </div>
               </div>
-            ))}
+            ))} */}
+
+            {loading ? (
+              <p className="text-slate-400 text-sm">Loading activities...</p>
+            ) : stats?.activity?.length > 0 ? (
+              stats?.activity.slice(0, 10).map((item, index) => (
+                <div key={`${item.type}-${item.at}-${index}`} className="">
+                  <div className="flex justify-between  ">
+                    <div className="flex items-center justify-center h-full gap-2 ">
+                      <span className="text-blue-700 bg-slate-200/50 p-2 rounded-full">
+                        {/* <Store className="size-5" /> */}
+
+                        {activityIcons[item.type] || item.type}
+                      </span>
+
+                      <div>
+                        <h2 className="text-sm font-bold">
+                          {activityLabels[item.type] || item.type}
+                        </h2>
+
+                        <p className="text-xs text-slate-500">
+                          {item.title || "Activity"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-blue-700">
+                      {formatTimeAgo(item.at)}
+                    </p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-slate-400">
+                No recent activities yet.
+              </p>
+            )}
           </div>
         </div>
 
         {/* Top products */}
-        <div className="bg-white shadow-md mt-3 px-2 py-3 rounded-xl">
+        {/* <div className="bg-white shadow-md mt-3 px-2 py-3 rounded-xl">
           <div className="flex justify-between items-center mb-2">
             <div className="flex items-center justify-center gap-2 h-full">
               <Trophy className="size-6 text-yellow-500" />
@@ -366,7 +446,7 @@ const HomePage = () => {
               </div>
             ))}
           </div>
-        </div>
+        </div> */}
       </section>
     </main>
   );
