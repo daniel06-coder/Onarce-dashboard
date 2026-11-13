@@ -65,12 +65,14 @@ const HomePage = () => {
   };
 
   const activityIcons = {
-    shop_registered: <Store className="size-8"/>,
-    product_added: <BiCube className="size-8"/>,
-    customer_registered: <User className="size-8"/>,
-    order_placed: <ShoppingCart className="size-8"/>,
+    shop_registered: <Store className="size-8" />,
+    product_added: <BiCube className="size-8  text-yellow-500" />,
+    customer_registered: <User className="size-8" />,
+    order_placed: <ShoppingCart className="size-8 text-green-600" />,
     order_delivered: "Order delivered",
   };
+
+  
 
   const formatTimeAgo = (timestamp) => {
     const seconds = Math.floor((Date.now() - timestamp) / 1000);
@@ -114,6 +116,25 @@ const HomePage = () => {
     fetchStats();
   }, []);
 
+  const Growth = ({value, days = 30})=> {
+    if (value === null || value === undefined)
+      return <span className="text-sm text-slate-400 font-bold">New</span>; 
+
+    const up = value >= 0;
+
+    return (
+      <span
+        title={`vs ${days} days ago`}
+        className={`text-sm font-extrabold ${up ? "text-green-500" : "text-red-500"}`}
+      >
+        {up ? "+" : ""}
+        {value}%
+      </span>
+    );
+
+
+  }
+
   return (
     <main className="">
       <section className="px-2 md:px-15 ">
@@ -143,7 +164,12 @@ const HomePage = () => {
                       : (stats?.totals?.shops?.toLocaleString() ?? "0")}
                   </p>
                   <span className="text-sm text-green-500 font-extrabold">
-                    +18.5%
+                    {!loading && (
+                      <Growth
+                        value={stats?.growth?.shops}
+                        days={stats?.growth?.periodDays}
+                      />
+                    )}
                   </span>
 
                   <div className="absolute right-0 bottom-0">
@@ -169,7 +195,12 @@ const HomePage = () => {
                       : (stats?.totals?.orders?.toLocaleString() ?? "0")}
                   </p>
                   <span className="text-sm text-green-500 font-extrabold">
-                    +12.5%
+                    {!loading && (
+                      <Growth
+                        value={stats?.growth?.orders}
+                        days={stats?.growth?.periodDays}
+                      />
+                    )}
                   </span>
 
                   <div className="absolute right-0 bottom-0">
@@ -195,7 +226,12 @@ const HomePage = () => {
                       : (stats?.totals?.customers?.toLocaleString() ?? "0")}
                   </p>
                   <span className="text-sm text-green-500 font-extrabold">
-                    +12.5%
+                    {!loading && (
+                      <Growth
+                        value={stats?.growth?.customer_registered}
+                        days={stats?.growth?.periodDays}
+                      />
+                    )}
                   </span>
 
                   <div className="absolute right-0 bottom-0">

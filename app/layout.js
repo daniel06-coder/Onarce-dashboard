@@ -27,7 +27,8 @@ export default function RootLayout({ children }) {
     >
       <DashboardTabProvider>
       <Navbar/>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">{children}
+      </body>
       <Footer/>
       </DashboardTabProvider>
     </html>

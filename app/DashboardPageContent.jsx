@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import HomePage from "./HomePage";
 import { useDashboardTab } from "@/context/DashboardTabContext";
+import OnarceAnalytics from "./Analytics/OnarceAnalytics";
 
 const Placeholder = ({ title }) => (
   <div className="px-2 py-10 text-center text-slate-500">
@@ -12,7 +13,7 @@ const Placeholder = ({ title }) => (
 
 const tabPages = [
   <HomePage key={"overview"} />,
-  <Placeholder key="analytics" title="Analytics" />,
+  <OnarceAnalytics key="analytics" title="Analytics" />,
   <Placeholder key="settings" title="Settings" />,
   <Placeholder key="support" title="Support" />,
 ];

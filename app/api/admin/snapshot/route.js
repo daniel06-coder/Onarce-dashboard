@@ -1,4 +1,5 @@
 import { adminDb } from "@/lib/firebaseAdmin";
+import { Timestamp } from "firebase-admin/firestore";
 import { NextResponse } from "next/server";
 
 
@@ -14,6 +15,13 @@ const latest = (col, field, n = 10) => adminDb.collection(col).orderBy(field, "d
 
 const count = async (q) => (await q.count().get()).data().count;
 
+const DAYS = 30;
+
+const cutoff = new Date(Date.now() - DAYS * 24 * 60 * 60 *1000);
+
+const growth = (now, then) =>
+  then > 0 ? Number((((now - then) / then) * 100).toFixed(1)) : null;
+
 export async function GET(req) {
     try {
         console.log("CRON SECRET EXISTS:", !!process.env.CRON_SECRET);
@@ -27,6 +35,9 @@ export async function GET(req) {
         shops,
         orders,
         customers,
+        shopsThen,
+        ordersThen,
+        customersThen,
         products,
         newShops,
         newProducts,
@@ -37,6 +48,14 @@ export async function GET(req) {
         count(adminDb.collection("stores")),
         count(adminDb.collection("orders")),
         count(adminDb.collection("users").where("role", "==", "customer")),
+        count(adminDb.collection("stores").where("createdAt", "<", cutoff)),
+        count(adminDb.collection("orders").where("createdAt", "<", cutoff)),
+        count(
+          adminDb
+            .collection("users")
+            .where("role", "==", "customer")
+            .where("createdAt", "<", cutoff),
+        ),
         count(adminDb.collection("products")),
         latest("stores", "createdAt"),
         latest("products", "createdAt"),
@@ -85,8 +104,14 @@ export async function GET(req) {
 
       await adminDb.doc("adminStats/summary").set({
         totals: { shops, orders, customers, products },
+        growth:{
+          periodDays: DAYS,
+          shops: growth(shops, shopsThen),
+    orders: growth(orders, ordersThen),
+    customers: growth(customers, customersThen),
+        },
         activity,
-        updatedAt: Date.now(),
+        updatedAt: Timestamp.now(),
       });
 
       return NextResponse.json({

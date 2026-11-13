@@ -28,8 +28,10 @@ export async function GET(req) {
     console.error("ADMIN STATS ERROR:", error);
 
     return NextResponse.json(
-      { error: "Failed to load statistics" },
+      { error: "Failed to load statistics",
+        details: error.message,
+       },
       { status: 500 },
-    );
+    )
   }
 }
