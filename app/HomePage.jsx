@@ -30,12 +30,32 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { signOut, onAuthStateChanged } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import { useRouter } from "next/navigation";
 
 const HomePage = () => {
   const [hide, sethide] = useState(false);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+
+
+
+  const router = useRouter();
+
+const handleSignOut = async () => {
+  try {
+    await signOut(auth);
+    router.replace("/auth");
+  } catch (error) {
+    console.error("Sign out failed:", error);
+  }
+};
+
+
+
 
   // temporary
   const data = [
@@ -88,33 +108,66 @@ const HomePage = () => {
     return `${Math.floor(seconds / 86400)}d ago`;
   };
 
-  React.useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        setLoading(true);
-        setError("");
+React.useEffect(() => {
+  let active = true;
 
-        const res = await fetch("/api/admin/stats", {
-          cache: "no-store",
-        });
+  const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      router.replace("/auth");
+      return;
+    }
 
-        if (!res.ok) {
-          throw new Error("Unable to load dashboard statistics");
+    try {
+      setLoading(true);
+      setError("");
+
+      const token = await user.getIdToken();
+
+      const res = await fetch("/api/admin/stats", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+      });
+
+      if (res.status === 401 || res.status === 403) {
+        await signOut(auth);
+
+        if (active) {
+          router.replace("/auth");
         }
 
-        const result = await res.json();
+        return;
+      }
 
+      const result = await res.json();
+
+      if (!res.ok) {
+        throw new Error(result.error || "Unable to load dashboard statistics");
+      }
+
+      if (active) {
         setStats(result);
-      } catch (error) {
-        console.error(error);
+      }
+    } catch (error) {
+      console.error("Dashboard error:", error);
+
+      if (active) {
         setError(error.message);
-      } finally {
+      }
+    } finally {
+      if (active) {
         setLoading(false);
       }
-    };
+    }
+  });
 
-    fetchStats();
-  }, []);
+  return () => {
+    active = false;
+    unsubscribe();
+  };
+}, [router]);
 
   const Growth = ({value, days = 30})=> {
     if (value === null || value === undefined)
@@ -483,7 +536,9 @@ const HomePage = () => {
             ))}
           </div>
         </div> */}
+      <button disabled={handleSignOut} onClick={handleSignOut} className="w-full bg-blue-700 py-2  text-white">Sign out</button>
       </section>
+
     </main>
   );
 };

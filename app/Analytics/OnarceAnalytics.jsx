@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 // import { doc, getDoc } from "firebase/firestore";
-// import { db } from "@/lib/firebase";
+import { auth } from "@/lib/firebase";
 
 const UsageBar = ({ label, used, limit }) => {
   const pct = limit ? Math.min(100, ((used ?? 0) / limit) * 100) : 0;
@@ -41,7 +41,22 @@ const load = async () => {
     setLoading(true);
     setError("");
 
+
+    const user = auth.currentUser;
+
+    if (!user) {
+      throw new Error("Please sign in first.");
+    }
+
+    const token = await user.getIdToken();
+
+
+
+
     const res = await fetch("/api/admin/stats", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
       cache: "no-store",
     });
 
